@@ -3,9 +3,6 @@ pipeline {
 
     stages {
         stage('Build') {
-            script:
-                - unset DOCKER_HOST
-                - docker login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
             agent {
                 docker {
                     image 'node:18-alpine'
