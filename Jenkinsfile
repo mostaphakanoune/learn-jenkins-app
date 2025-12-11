@@ -1,0 +1,11 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Salam') {
+            steps {
+                echo 'Salam Mostapha'
+            }
+        }
+    }
+}
