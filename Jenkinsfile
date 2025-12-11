@@ -2,9 +2,22 @@ pipeline {
     agent any
 
     stages {
-        stage('Salam') {
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    ReuseNode true
+                }
+            }
             steps {
-                echo 'Salam Mostapha'
+                sh '''
+                    ls -la 
+                    node --version
+                    npm --version
+                    npm ci
+                    npm run build
+                    ls -la 
+                '''
             }
         }
     }
