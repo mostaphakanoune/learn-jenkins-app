@@ -49,8 +49,6 @@ pipeline {
             steps {
                 sh '''
                     npm install serve
-                    npm fund
-                    npm audit fix --force || true
                     # The symbo '&' is for start the server in the background other wise the next command won't run
                     node_modules/.bin/serve -s build &
                     sleep 10 # wait for the server to start
