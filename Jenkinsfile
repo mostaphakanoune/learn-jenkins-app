@@ -2,7 +2,7 @@ pipeline {
     agent any
    
     stages {
-        /*
+        
         stage('Build') {
             agent {
                 docker {
@@ -21,7 +21,7 @@ pipeline {
                 '''
             }
         }
-        */
+        
         stage('Tests') {
             parallel {
                 stage('Unit Tests') {
@@ -58,7 +58,7 @@ pipeline {
                     steps {
                         sh '''
                             npm install serve
-                            # The symbo '&' is for start the server in the background other wise the next command won't run
+                            #The symbo '&' is for start the server in the background other wise the next command won't run
                             node_modules/.bin/serve -s build &
                             sleep 10 # wait for the server to start
                             # To get the report as html file you should add --reporter=html
