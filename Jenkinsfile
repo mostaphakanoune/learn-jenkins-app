@@ -34,7 +34,9 @@ pipeline {
                 
                     steps {
                         sh '''
-                            npm ci
+                             ls -la 
+                            node --version
+                            npm --version
                             test -f build/index.html
                             npm test
                         '''
@@ -42,7 +44,6 @@ pipeline {
                     post {
                         always {
                             junit 'jest-results/junit.xml'
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright HTML Report', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }
