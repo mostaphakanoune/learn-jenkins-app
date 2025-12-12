@@ -53,7 +53,8 @@ pipeline {
                     # The symbo '&' is for start the server in the background other wise the next command won't run
                     node_modules/.bin/serve -s build &
                     sleep 10 # wait for the server to start
-                    npx playwright test
+                    # To get the report as html file you should add --reporter=html
+                    npx playwright test --reporter=html
                 '''
             }
         }
