@@ -34,7 +34,8 @@ pipeline {
                 
                     steps {
                         sh '''
-                             ls -la 
+                            ls -la 
+                            npm install react-scripts
                             node --version
                             npm --version
                             test -f build/index.html
