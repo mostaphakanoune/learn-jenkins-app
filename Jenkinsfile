@@ -34,10 +34,8 @@ pipeline {
                 
                     steps {
                         sh '''
-                            ls -la 
+                            # This line is added to resolve some issues related to missing dependencies (react-scripts) in alpine image
                             npm install react-scripts
-                            node --version
-                            npm --version
                             test -f build/index.html
                             npm test
                         '''
