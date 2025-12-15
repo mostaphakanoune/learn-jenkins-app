@@ -83,7 +83,7 @@ pipeline {
             }
             steps {
                 sh '''
-                    npm install netlify-cli@20.10.1
+                    npm install netlify-cli@latest --save-dev
                     node_modules/.bin/netlify --version                
                 '''
             }
