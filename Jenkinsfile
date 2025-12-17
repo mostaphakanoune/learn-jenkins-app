@@ -90,11 +90,12 @@ pipeline {
             }
             steps {
                 sh '''
-                    npm install netlify-cli@latest --save-dev
+                    npm install netlify-cli@latest --save-dev node-jq  # install netlify cli and jq for parsing json
                     node_modules/.bin/netlify --version  
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"  
                     node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --no-build --dir=build  # Deploy without running a build first
+                    node_modules/.bin/netlify deploy --no-build --dir=build  --json > deploy-output.json# Deploy without running a build first
+                    node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json # search for deploy_url in the json deploy-output
                 '''
             }
         }
@@ -106,7 +107,7 @@ pipeline {
                 '''
                 timeout(time: 5, unit: 'MINUTES') {
                         input message: 'Are you sure to deploy?', ok: 'Yes, I am sure I want to deploy'
-                    }  
+                }  
             }
         }
 
