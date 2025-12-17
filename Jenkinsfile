@@ -105,7 +105,9 @@ pipeline {
                 sh '''
                     echo "Approve Deploying to Prod" 
                     input 'Are you sure you want to deploy prod now?' 
-                    
+                    timeout(time: 5, unit: 'MINUTES') {
+                        input message: 'Approve Deploying to Prod', ok: 'Deploy'
+                    }  
                 '''
             }
         }
