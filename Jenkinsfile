@@ -109,12 +109,13 @@ pipeline {
 
             environment {
                 CI_ENVIRONMENT_URL = 'https://papaya-caramel-0eee4f.netlify.app'
+                 NETLIFY_SITE_ID = 'fc322399-a9c3-4488-9ac0-60ad60c998f2'
             }
         
             steps {
                 sh '''
                     npx playwright test --reporter=html
-                    #echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
+                    echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
                 '''
             }
             post {
