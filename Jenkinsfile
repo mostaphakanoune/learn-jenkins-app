@@ -2,6 +2,9 @@ pipeline {
     agent any
       
     stages {
+        environment {
+            NETLIFY_SITE_ID = credentials('fc322399-a9c3-4488-9ac0-60ad60c998f2')
+        }
         
         stage('Build') {
             agent {
@@ -73,7 +76,7 @@ pipeline {
                 }
             }
         }
-/*
+
         stage('Deploy') {
             agent {
                 docker {
@@ -91,6 +94,5 @@ pipeline {
                 '''
             }
         } 
-*/ 
     }  
 }
