@@ -90,9 +90,9 @@ pipeline {
                 sh '''
                     npm install netlify-cli@latest --save-dev
                     node_modules/.bin/netlify --version  
-                    #echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
-                    node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --no-build --dir=build --prod # Deploy without running a build first
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
+                    #node_modules/.bin/netlify status 
+                    #node_modules/.bin/netlify deploy --no-build --dir=build --prod # Deploy without running a build first
                 '''
             }
         } 
