@@ -99,15 +99,13 @@ pipeline {
             }
         }
 
-        stage('Approve Deploy to Prod') {
-           
+        stage('Approval') {
             steps {
                 sh '''
                     echo "Approve Deploying to Prod" 
-                    input message: 'Are you sure to deploy?', ok: 'Yes, I am sure I want to deploy'
-                    #timeout(time: 5, unit: 'MINUTES') {
-                        #input message: 'Approve Deploying to Prod', ok: 'Deploy'
-                    #}  
+                    timeout(time: 5, unit: 'MINUTES') {
+                        input message: 'Are you sure to deploy?', ok: 'Yes, I am sure I want to deploy'
+                    }  
                 '''
             }
         }
