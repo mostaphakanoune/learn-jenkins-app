@@ -98,6 +98,19 @@ pipeline {
                 '''
             }
         }
+
+        stage('Approve Deploy to Prod') {
+           
+            steps {
+                sh '''
+                    echo "Approve Deploying to Prod" 
+                    input 'Are you sure you want to deploy prod now?' 
+                    
+                '''
+            }
+        }
+
+        
          stage('Deploy prod') {
             agent {
                 docker {
