@@ -89,7 +89,7 @@ pipeline {
                 }
             }
              environment {
-                CI_ENVIRONMENT_URL = 'https://papaya-caramel-0eee4f.netlify.app'
+                CI_ENVIRONMENT_URL = 'STAGING_URL_PLACEHOLDER'
             }
         
             steps {
