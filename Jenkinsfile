@@ -74,7 +74,7 @@ pipeline {
                     }
                     post {
                         always {
-                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright Local', reportTitles: '', useWrapperFileDirectly: true])
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Local E2E', reportTitles: '', useWrapperFileDirectly: true])
                         }
                     }
                 }
@@ -95,10 +95,40 @@ pipeline {
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"  
                     node_modules/.bin/netlify status 
                     node_modules/.bin/netlify deploy --no-build --dir=build  --json > deploy-output.json# Deploy without running a build first
-                    node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json # search for deploy_url in the json deploy-output
+                    # This line is alos needed for Staging E2E, that is why we wrapped it in a groovy script block below
+                    #node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json # search for deploy_url in the json deploy-output
                 '''
+                script {
+                    env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout: true).trim()
+                    echo "Staging Deployment URL: ${env.CI_ENVIRONMENT_URL}"
+                }
             }
         }
+
+        stage('Staging E2E') {
+            agent {
+                docker {
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    reuseNode true
+                }
+            }
+
+            environment {
+                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
+            }
+        
+            steps {
+                sh '''
+                    npx playwright test --reporter=html
+                    echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
+                '''
+            }
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E', reportTitles: '', useWrapperFileDirectly: true])
+                }
+            }
+        } 
 
         stage('Approval') {
             steps {
@@ -151,7 +181,7 @@ pipeline {
             }
             post {
                 always {
-                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Playwright E2E', reportTitles: '', useWrapperFileDirectly: true])
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod E2E', reportTitles: '', useWrapperFileDirectly: true])
                 }
             }
         } 
