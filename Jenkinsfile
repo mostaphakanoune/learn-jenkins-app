@@ -141,26 +141,7 @@ pipeline {
             }
         }
 
-        
-         stage('Deploy prod') {
-            agent {
-                docker {
-                    image 'node:18-alpine'
-                    reuseNode true
-                }
-            }
-            steps {
-                sh '''
-                    npm install netlify-cli@latest --save-dev
-                    node_modules/.bin/netlify --version  
-                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
-                    node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --no-build --dir=build --prod # Deploy without running a build first
-                '''
-            }
-        }
-
-        stage('Prod E2E') {
+        stage('Deploy prod') {
             agent {
                 docker {
                     image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
@@ -170,11 +151,16 @@ pipeline {
 
             environment {
                 CI_ENVIRONMENT_URL = 'https://papaya-caramel-0eee4f.netlify.app'
-                 NETLIFY_SITE_ID = 'fc322399-a9c3-4488-9ac0-60ad60c998f2'
             }
         
             steps {
                 sh '''
+                    node --version
+                    npm install netlify-cli@latest --save-dev
+                    node_modules/.bin/netlify --version  
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
+                    node_modules/.bin/netlify status 
+                    node_modules/.bin/netlify deploy --no-build --dir=build --prod # Deploy without running a build first
                     npx playwright test --reporter=html
                     echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
                 '''
