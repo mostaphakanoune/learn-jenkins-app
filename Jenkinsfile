@@ -98,7 +98,6 @@ pipeline {
                     node_modules/.bin/netlify deploy --no-build --dir=build  --json > deploy-output.json # Deploy without running a build first
                     CI_ENVIRONMENT_URL = $(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json) # search for deploy_url in the json deploy-output
                     npx playwright test --reporter=html
-                    echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
                 '''
             }
             post {
