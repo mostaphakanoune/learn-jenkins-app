@@ -84,41 +84,19 @@ pipeline {
         stage('Deploy staging') {
             agent {
                 docker {
-                    image 'node:18-alpine'
+                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
                     reuseNode true
                 }
             }
+        
             steps {
                 sh '''
                     npm install netlify-cli@latest --save-dev node-jq  # install netlify cli and jq for parsing json
                     node_modules/.bin/netlify --version  
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"  
                     node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --no-build --dir=build  --json > deploy-output.json# Deploy without running a build first
-                    # This line is alos needed for Staging E2E, that is why we wrapped it in a groovy script block below
-                    #node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json # search for deploy_url in the json deploy-output
-                '''
-                script {
-                    env.STAGING_URL = sh(script: "node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json", returnStdout: true).trim()
-                    echo "Staging Deployment URL: ${env.CI_ENVIRONMENT_URL}"
-                }
-            }
-        }
-
-        stage('Staging E2E') {
-            agent {
-                docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
-                    reuseNode true
-                }
-            }
-
-            environment {
-                CI_ENVIRONMENT_URL = "${env.STAGING_URL}"
-            }
-        
-            steps {
-                sh '''
+                    node_modules/.bin/netlify deploy --no-build --dir=build  --json > deploy-output.json # Deploy without running a build first
+                    CI_ENVIRONMENT_URL = $(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json) # search for deploy_url in the json deploy-output
                     npx playwright test --reporter=html
                     echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
                 '''
