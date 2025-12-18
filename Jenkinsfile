@@ -88,6 +88,9 @@ pipeline {
                     reuseNode true
                 }
             }
+             environment {
+                CI_ENVIRONMENT_URL = 'STAGING_URL_PLACEHOLDER'
+            }
         
             steps {
                 sh '''
