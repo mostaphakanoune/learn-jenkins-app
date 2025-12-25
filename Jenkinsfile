@@ -62,16 +62,15 @@ pipeline {
                 stage('E2E Tests') {
                     agent {
                         docker {
-                            image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                            image 'my-playwright-image'
                             reuseNode true
                         }
                     }
                 
                     steps {
                         sh '''
-                            npm install serve
                             #The symbo '&' is for start the server in the background other wise the next command won't run
-                            node_modules/.bin/serve -s build &
+                            serve -s build &
                             sleep 10 # wait for the server to start
                             # To get the report as html file you should add --reporter=html
                             npx playwright test --reporter=html
