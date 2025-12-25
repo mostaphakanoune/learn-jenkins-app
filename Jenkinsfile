@@ -11,7 +11,10 @@ pipeline {
 
         stage('Docker') {
             steps {
-                sh 'docker build -t my-playwright .'
+                sh '''
+                    unset DOCKER_HOST
+                    docker build -t my-playwright .
+                '''
             }
         }
         
