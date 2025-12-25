@@ -89,7 +89,7 @@ pipeline {
         stage('Deploy staging') {
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    image 'my-playwright-image'
                     reuseNode true
                 }
             }
@@ -99,12 +99,11 @@ pipeline {
         
             steps {
                 sh '''
-                    npm install netlify-cli@latest --save-dev node-jq  # install netlify cli and jq for parsing json
-                    node_modules/.bin/netlify --version  
+                    netlify --version  
                     echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"  
-                    node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --no-build --dir=build  --json > deploy-output.json # Deploy without running a build first
-                    CI_ENVIRONMENT_URL=$(node_modules/.bin/node-jq -r '.deploy_url' deploy-output.json) # search for deploy_url in the json deploy-output
+                    netlify status 
+                    netlify deploy --no-build --dir=build  --json > deploy-output.json # Deploy without running a build first
+                    CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json) # search for deploy_url in the json deploy-output
                     npx playwright test --reporter=html
                 '''
             }
@@ -118,7 +117,7 @@ pipeline {
         stage('Deploy prod') {
             agent {
                 docker {
-                    image 'mcr.microsoft.com/playwright:v1.39.0-jammy'
+                    image 'my-playwright-image'
                     reuseNode true
                 }
             }
@@ -130,11 +129,10 @@ pipeline {
             steps {
                 sh '''
                     node --version
-                    npm install netlify-cli@latest --save-dev
-                    node_modules/.bin/netlify --version  
+                    netlify --version  
                     echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
-                    node_modules/.bin/netlify status 
-                    node_modules/.bin/netlify deploy --no-build --dir=build --prod # Deploy without running a build first
+                    netlify status 
+                    netlify deploy --no-build --dir=build --prod # Deploy without running a build first
                     npx playwright test --reporter=html
                 '''
             }
