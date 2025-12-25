@@ -9,6 +9,12 @@ pipeline {
       
     stages {
 
+        stage('Docker') {
+            steps {
+                sh 'docker build -t my-playwright-image .'
+            }
+        }
+        
         stage('Build') {
             agent {
                 docker {
@@ -130,7 +136,6 @@ pipeline {
                     node_modules/.bin/netlify status 
                     node_modules/.bin/netlify deploy --no-build --dir=build --prod # Deploy without running a build first
                     npx playwright test --reporter=html
-                    echo "Testing Production Deployment: $CI_ENVIRONMENT_URL"  
                 '''
             }
             post {
