@@ -11,7 +11,7 @@ pipeline {
 
         stage('Docker') {
             steps {
-                sh 'docker build -t my-playwright-image .'
+                sh 'docker build -t my-playwright .'
             }
         }
         
