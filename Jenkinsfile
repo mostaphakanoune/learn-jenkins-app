@@ -6,132 +6,135 @@ pipeline {
             NETLIFY_AUTH_TOKEN = credentials('netlify-token')
             REACT_APP_VERSION = "1.0.$BUILD_ID"    
     }
+
+    stages 
       
-    stage('Build') {
-        agent {
-            docker {
-                image 'node:18-alpine'
-                reuseNode true
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reuseNode true
+                }
+            }
+            steps {
+                sh '''
+                    ls -la 
+                    node --version
+                    npm --version
+                    npm ci
+                    npm run build
+                    ls -la 
+                '''
             }
         }
-        steps {
-            sh '''
-                ls -la 
-                node --version
-                npm --version
-                npm ci
-                npm run build
-                ls -la 
-            '''
+        
+        stage('Tests') {
+            parallel {
+                stage('Unit Tests') {
+                    agent {
+                        docker {
+                            image 'node:18-alpine'
+                            reuseNode true
+                        }
+                    }
+                
+                    steps {
+                        sh '''
+                            # This line is added to resolve some issues related to missing dependencies (react-scripts) in alpine image
+                            npm install react-scripts
+                            test -f build/index.html
+                            npm test
+                        '''
+                    }
+                    post {
+                        always {
+                            junit 'jest-results/junit.xml'
+                        }
+                    }
+                }
+
+                stage('E2E Tests') {
+                    agent {
+                        docker {
+                            image 'my-playwright-image'
+                            reuseNode true
+                        }
+                    }
+                
+                    steps {
+                        sh '''
+                            #The symbo '&' is for start the server in the background other wise the next command won't run
+                            serve -s build &
+                            sleep 10 # wait for the server to start
+                            # To get the report as html file you should add --reporter=html
+                            npx playwright test --reporter=html
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Local E2E', reportTitles: '', useWrapperFileDirectly: true])
+                        }
+                    }
+                }
+            }
         }
-    }
-    
-    stage('Tests') {
-        parallel {
-            stage('Unit Tests') {
-                agent {
-                    docker {
-                        image 'node:18-alpine'
-                        reuseNode true
-                    }
+
+        stage('Deploy staging') {
+            agent {
+                docker {
+                    image 'my-playwright-image'
+                    reuseNode true
                 }
-            
-                steps {
-                    sh '''
-                        # This line is added to resolve some issues related to missing dependencies (react-scripts) in alpine image
-                        npm install react-scripts
-                        test -f build/index.html
-                        npm test
-                    '''
+            }
+                environment {
+                CI_ENVIRONMENT_URL = 'STAGING_URL_PLACEHOLDER'
+            }
+        
+            steps {
+                sh '''
+                    netlify --version  
+                    echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"  
+                    netlify status 
+                    netlify deploy --no-build --dir=build  --json > deploy-output.json # Deploy without running a build first
+                    CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json) # search for deploy_url in the json deploy-output
+                    npx playwright test --reporter=html
+                '''
+            }
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E', reportTitles: '', useWrapperFileDirectly: true])
                 }
-                post {
-                    always {
-                        junit 'jest-results/junit.xml'
-                    }
+            }
+        } 
+
+        stage('Deploy prod') {
+            agent {
+                docker {
+                    image 'my-playwright-image'
+                    reuseNode true
                 }
             }
 
-            stage('E2E Tests') {
-                agent {
-                    docker {
-                        image 'my-playwright-image'
-                        reuseNode true
-                    }
-                }
-            
-                steps {
-                    sh '''
-                        #The symbo '&' is for start the server in the background other wise the next command won't run
-                        serve -s build &
-                        sleep 10 # wait for the server to start
-                        # To get the report as html file you should add --reporter=html
-                        npx playwright test --reporter=html
-                    '''
-                }
-                post {
-                    always {
-                        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Local E2E', reportTitles: '', useWrapperFileDirectly: true])
-                    }
-                }
-            }
-        }
-    }
-
-    stage('Deploy staging') {
-        agent {
-            docker {
-                image 'my-playwright-image'
-                reuseNode true
-            }
-        }
             environment {
-            CI_ENVIRONMENT_URL = 'STAGING_URL_PLACEHOLDER'
-        }
-    
-        steps {
-            sh '''
-                netlify --version  
-                echo "Deploying to staging. Site ID: $NETLIFY_SITE_ID"  
-                netlify status 
-                netlify deploy --no-build --dir=build  --json > deploy-output.json # Deploy without running a build first
-                CI_ENVIRONMENT_URL=$(node-jq -r '.deploy_url' deploy-output.json) # search for deploy_url in the json deploy-output
-                npx playwright test --reporter=html
-            '''
-        }
-        post {
-            always {
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Staging E2E', reportTitles: '', useWrapperFileDirectly: true])
+                CI_ENVIRONMENT_URL = 'https://papaya-caramel-0eee4f.netlify.app'
             }
-        }
-    } 
-
-    stage('Deploy prod') {
-        agent {
-            docker {
-                image 'my-playwright-image'
-                reuseNode true
+        
+            steps {
+                sh '''
+                    node --version
+                    netlify --version  
+                    echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
+                    netlify status 
+                    netlify deploy --no-build --dir=build --prod # Deploy without running a build first
+                    npx playwright test --reporter=html
+                '''
             }
-        }
-
-        environment {
-            CI_ENVIRONMENT_URL = 'https://papaya-caramel-0eee4f.netlify.app'
-        }
-    
-        steps {
-            sh '''
-                node --version
-                netlify --version  
-                echo "Deploying to production. Site ID: $NETLIFY_SITE_ID"  
-                netlify status 
-                netlify deploy --no-build --dir=build --prod # Deploy without running a build first
-                npx playwright test --reporter=html
-            '''
-        }
-        post {
-            always {
-                publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod E2E', reportTitles: '', useWrapperFileDirectly: true])
+            post {
+                always {
+                    publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, icon: '', keepAll: false, reportDir: 'playwright-report', reportFiles: 'index.html', reportName: 'Prod E2E', reportTitles: '', useWrapperFileDirectly: true])
+                }
             }
-        }
-    } 
+        } 
+    }
 }  
 
